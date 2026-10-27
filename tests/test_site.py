@@ -106,6 +106,11 @@ class SiteTest(unittest.TestCase):
             self.assertEqual(len(logo), 1, page)
             self.assertEqual(resolve(page, logo[0]["href"]), ROOT / "index.html", page)
 
+    def test_wordmark_shows_the_name_as_two_words(self):
+        for page in PAGES:
+            logo = [link for link in parse(page).links if "wordmark" in link["class"]]
+            self.assertEqual(logo[0]["text"].strip(), "Mario Lavina", page)
+
     def test_home_tiles_are_not_clickable(self):
         home = parse("home")
         self.assertEqual([link for link in home.links if link["in_grid"]], [])
