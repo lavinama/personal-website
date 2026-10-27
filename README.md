@@ -18,9 +18,11 @@ Open http://localhost:8000. Any static file server works.
 | --- | --- |
 | `index.html` | Home: 40 grid cells (16 hold images). Which cells exist at which width is set by the `v-*` classes. |
 | `about/index.html` | About page |
-| `cv/index.html` | CV page: the PDF embedded full-page, with a download link |
+| `cv/index.html` | CV page: the PDF drawn into the page, with a download link |
 | `assets/css/style.css` | All styles |
 | `assets/js/home.js` | Tile reveal animation (respects reduced motion) |
+| `assets/js/cv.js` | Draws the CV PDF page by page with PDF.js, so it shows in any browser, with selectable text and clickable links |
+| `assets/vendor/pdfjs/` | PDF.js 5.6.205, self-hosted (Apache-2.0, see its README) |
 | `assets/img/tile-NN.svg` | Home-page artwork |
 | `assets/Mario_Lavina_CV.pdf` | The CV |
 | `assets/fonts/` | Inter Tight (SIL Open Font License, see `OFL.txt`) |

@@ -9,6 +9,7 @@
   <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
   <link rel="preload" href="../assets/fonts/inter-tight-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="../assets/css/style.css">
+  <script>document.documentElement.classList.add("js")</script>
 </head>
 <body>
   <header class="site-header">
@@ -21,8 +22,10 @@
 
   <main class="cv">
     <p class="cv-bar"><a href="../assets/Mario_Lavina_CV.pdf" download>Download PDF</a></p>
-    <iframe class="cv-frame" src="../assets/Mario_Lavina_CV.pdf#view=FitH&amp;navpanes=0" title="Mario Lavina, CV (PDF)"></iframe>
-    <p class="cv-mobile"><a href="../assets/Mario_Lavina_CV.pdf">Open the CV (PDF) ↗</a></p>
+    <div class="cv-viewer" data-pdf="../assets/Mario_Lavina_CV.pdf" role="document" aria-label="CV"></div>
+    <noscript><p class="cv-fallback"><a href="../assets/Mario_Lavina_CV.pdf">Open the CV (PDF) ↗</a></p></noscript>
   </main>
+
+  <script type="module" src="../assets/js/cv.js"></script>
 </body>
 </html>

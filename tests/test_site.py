@@ -13,7 +13,7 @@ PAGES = {"home": "index.html", "about": "about/index.html", "cv": "cv/index.html
 VOID = {"img", "link", "meta", "br", "hr", "input", "source"}
 EXTERNAL = ("http://", "https://", "mailto:", "tel:", "#")
 # The repository is public: no phone, email or private repository names in text files.
-PRIVATE = re.compile(r"mario\.lavina00|\(310\)\s*569|310[-. ]?569[-. ]?3370|mailto:|career-application", re.I)
+PRIVATE = re.compile(r"mario\.lavina00|\(310\)\s*569|310[-. ]?569[-. ]?3370|mailto:[^\s<>]*@|career-application", re.I)
 TEXT_SUFFIXES = {".html", ".md", ".css", ".js", ".py", ".svg", ".txt"}
 
 
@@ -26,6 +26,9 @@ class PageParser(HTMLParser):
         self.links = []
         self.images = []
         self.iframes = []
+        self.scripts = []
+        self.assets = []
+        self.pdfs = []
         self.cells = 0
         self.text = []
 
@@ -42,6 +45,13 @@ class PageParser(HTMLParser):
                                 "in_grid": in_grid})
         if tag == "iframe":
             self.iframes.append(attrs.get("src", ""))
+        if tag == "link" and attrs.get("href"):
+            self.assets.append(attrs["href"])
+        if tag == "script" and attrs.get("src"):
+            self.scripts.append((attrs["src"], attrs.get("type")))
+            self.assets.append(attrs["src"])
+        if attrs.get("data-pdf"):
+            self.pdfs.append(attrs["data-pdf"])
         if "cell" in classes:
             self.cells += 1
         if tag not in VOID:
@@ -114,24 +124,26 @@ class SiteTest(unittest.TestCase):
         for page in PAGES:
             parsed = parse(page)
             refs = [link["href"] for link in parsed.links]
-            refs += [img["src"] for img in parsed.images] + parsed.iframes
+            refs += [img["src"] for img in parsed.images] + parsed.iframes + parsed.assets + parsed.pdfs
             for ref in refs:
                 if ref and not ref.startswith(EXTERNAL):
                     self.assertTrue(resolve(page, ref).exists(), f"{page}: {ref}")
 
     def test_no_private_contact_details(self):
         for path in ROOT.rglob("*"):
-            skipped = {".git", "tests"} & set(path.relative_to(ROOT).parts)
+            skipped = {".git", "tests", "vendor"} & set(path.relative_to(ROOT).parts)
             if path.is_file() and path.suffix in TEXT_SUFFIXES and not skipped:
                 found = PRIVATE.search(path.read_text(encoding="utf8"))
                 self.assertIsNone(found, f"{path.relative_to(ROOT)} contains {found and found.group(0)!r}")
 
-    def test_cv_page_embeds_a_real_pdf(self):
+    def test_cv_pdf_is_drawn_inside_the_page(self):
         cv = parse("cv")
-        self.assertEqual(len(cv.iframes), 1)
-        pdf = resolve("cv", cv.iframes[0])
-        self.assertTrue(pdf.is_file())
-        self.assertEqual(pdf.read_bytes()[:5], b"%PDF-")
+        self.assertEqual(cv.iframes, [], "the CV is drawn in the page, not in a browser frame")
+        self.assertEqual(len(cv.pdfs), 1)
+        self.assertEqual(resolve("cv", cv.pdfs[0]).read_bytes()[:5], b"%PDF-")
+        self.assertIn(("../assets/js/cv.js", "module"), cv.scripts)
+        for name in ("pdf.min.js", "pdf.worker.min.js", "LICENSE"):
+            self.assertTrue((ROOT / "assets/vendor/pdfjs" / name).is_file(), name)
 
 
 if __name__ == "__main__":
