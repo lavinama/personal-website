@@ -4,6 +4,8 @@ Run from the repository root:  python3 -m unittest discover -s tests -v
 """
 import posixpath
 import re
+import shutil
+import subprocess
 import unittest
 from html.parser import HTMLParser
 from pathlib import Path
@@ -149,6 +151,11 @@ class SiteTest(unittest.TestCase):
         self.assertIn(("../assets/js/cv.js", "module"), cv.scripts)
         for name in ("pdf.min.js", "pdf.worker.min.js", "LICENSE"):
             self.assertTrue((ROOT / "assets/vendor/pdfjs" / name).is_file(), name)
+
+    @unittest.skipUnless(shutil.which("node"), "node is needed to run the viewer tests")
+    def test_cv_viewer_never_draws_a_page_twice(self):
+        result = subprocess.run(["node", "--test", "tests/"], cwd=ROOT, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
 
 if __name__ == "__main__":

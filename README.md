@@ -22,11 +22,13 @@ Open http://localhost:8000. Any static file server works.
 | `assets/css/style.css` | All styles |
 | `assets/js/home.js` | Tile reveal animation (respects reduced motion) |
 | `assets/js/cv.js` | Draws the CV PDF page by page with PDF.js, so it shows in any browser, with selectable text and clickable links |
+| `assets/js/cv-render.js` | Decides when the pages are drawn and swapped (no PDF.js in it, so Node can test it) |
 | `assets/vendor/pdfjs/` | PDF.js 5.6.205, self-hosted (Apache-2.0, see its README) |
 | `assets/img/tile-NN.svg` | Home-page artwork |
 | `assets/Mario_Lavina_CV.pdf` | The CV |
 | `assets/fonts/` | Inter Tight (SIL Open Font License, see `OFL.txt`) |
 | `tests/test_site.py` | Smoke tests: navigation, tile grid, local links, PDF |
+| `tests/cv-render.test.mjs` | Viewer tests: one copy of each page, whatever the width does (run by `test_site.py` when Node is installed) |
 
 ## Common changes
 
@@ -43,6 +45,8 @@ Open http://localhost:8000. Any static file server works.
 ```bash
 python3 -m unittest discover -s tests -v
 ```
+
+The viewer tests need Node 18 or newer. To run only those: `node --test tests/`.
 
 ## Hosting
 

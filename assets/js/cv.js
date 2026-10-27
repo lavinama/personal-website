@@ -1,6 +1,7 @@
 // CV page: draws each page of the PDF into the document with PDF.js, so the CV shows up
 // in every browser, phones included, with selectable text and clickable links.
 import * as pdfjs from "../vendor/pdfjs/pdf.min.js";
+import { createRenderer } from "./cv-render.js";
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL("../vendor/pdfjs/pdf.worker.min.js", import.meta.url).href;
 
@@ -11,9 +12,6 @@ const SAFE_LINK = /^(https?:|mailto:)/i;
 
 const viewer = document.querySelector("[data-pdf]");
 const pdfUrl = new URL(viewer.dataset.pdf, document.baseURI).href;
-
-let latestRun = 0;
-let renderedWidth = 0;
 
 const targetWidth = () => Math.floor(Math.min(viewer.clientWidth, MAX_PAGE_WIDTH));
 
@@ -78,35 +76,26 @@ async function buildPage(pdf, number, width) {
   return wrapper;
 }
 
-async function render(pdf) {
-  const run = ++latestRun;
-  const width = targetWidth();
-  const firstDraw = renderedWidth === 0;
-  const pages = [];
-  for (let number = 1; number <= pdf.numPages; number += 1) {
-    const page = await buildPage(pdf, number, width);
-    if (run !== latestRun) return; // the window was resized again; a newer render takes over
-    pages.push(page);
-    if (firstDraw) viewer.append(page); // show early pages while the rest are still drawing
-  }
-  if (!firstDraw) viewer.replaceChildren(...pages); // after a resize, swap everything at once
-  renderedWidth = width;
-}
-
-function redrawOnResize(pdf) {
+function redrawOnResize(renderer) {
   let timer;
   new ResizeObserver(() => {
     clearTimeout(timer);
     timer = setTimeout(() => {
-      if (Math.abs(targetWidth() - renderedWidth) > 2) render(pdf).catch(showFallback);
+      if (renderer.needsRedraw()) renderer.render().catch(showFallback);
     }, 200);
   }).observe(viewer);
 }
 
 async function main() {
   const pdf = await pdfjs.getDocument({ url: pdfUrl, isEvalSupported: false }).promise;
-  await render(pdf);
-  redrawOnResize(pdf);
+  const renderer = createRenderer({
+    viewer,
+    numPages: pdf.numPages,
+    targetWidth,
+    buildPage: (number, width) => buildPage(pdf, number, width),
+  });
+  await renderer.render();
+  redrawOnResize(renderer);
 }
 
 main().catch((error) => {
