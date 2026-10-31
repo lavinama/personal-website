@@ -34,7 +34,7 @@ Open http://localhost:8000. Any static file server works.
 
 **Swap a tile image.** Replace `assets/img/tile-NN.svg` with your own file, or point the `<img>` in `index.html` at a new one (keep the `alt` text meaningful). Images are cropped to fill their tile, so any aspect ratio works; portrait around 3:4 crops least.
 
-**Regenerate the placeholder art.** `python3 scripts/generate_art.py` rewrites all 16 SVGs. They are drawn in code from fixed seeds, so the output is repeatable.
+**Regenerate the placeholder art.** `python3 scripts/generate_art.py` rewrites all 17 SVGs. They are drawn in code from fixed seeds, so the output is repeatable. `tile-10.svg`, the ridgeline, is generated but not on the home page.
 
 **Update the CV.** Compile the résumé and overwrite `assets/Mario_Lavina_CV.pdf`. This is a public site, so the PDF in this repo has the phone number and email removed from its header. Check that again after every rebuild.
 

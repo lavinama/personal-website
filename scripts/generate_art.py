@@ -16,6 +16,8 @@ PAPER, PAPER2, CREAM = "#f3eee3", "#e8dfcf", "#fbf7ee"
 INK, NAVY = "#26211e", "#2f3e5c"
 TERRA, BLUE, MUSTARD, SAGE, ROSE = "#e0714f", "#7ea6d6", "#f2c14e", "#a8bf9f", "#e9a79c"
 OUT = Path(__file__).resolve().parent.parent / "assets" / "img"
+ARM_SHOULDER = (178, 560)
+ARM_UPPER, ARM_FORE, ARM_WRIST = 215, 205, 62
 
 
 def fmt(value):
@@ -315,8 +317,61 @@ def spiral(rng):
     return svg("".join(body), NAVY)
 
 
+def arm_elbow(wrist):
+    """Two-link inverse kinematics, elbow up, for a wrist position."""
+    sx, sy = ARM_SHOULDER
+    dx, dy = wrist[0] - sx, wrist[1] - sy
+    reach = min(math.hypot(dx, dy), ARM_UPPER + ARM_FORE - 1)
+    bend = math.acos((ARM_UPPER ** 2 + reach ** 2 - ARM_FORE ** 2) / (2 * ARM_UPPER * reach))
+    angle = math.atan2(dy, dx) - bend
+    return sx + ARM_UPPER * math.cos(angle), sy + ARM_UPPER * math.sin(angle)
+
+
+def arm_pose(wrist, color, hub=None):
+    """One flat arm: two links, the wrist drop, a palm and two fingers."""
+    elbow = arm_elbow(wrist)
+    flange = (wrist[0], wrist[1] + ARM_WRIST)
+    links = ((ARM_SHOULDER, elbow, 42), (elbow, wrist, 34), (wrist, flange, 26))
+    blocks = ((flange[0] - 42, flange[1], 84, 16), (flange[0] - 42, flange[1] + 16, 13, 44),
+              (flange[0] + 29, flange[1] + 16, 13, 44))
+    parts = [f'<line x1="{fmt(a[0])}" y1="{fmt(a[1])}" x2="{fmt(b[0])}" y2="{fmt(b[1])}" stroke="{color}" '
+             f'stroke-width="{width}" stroke-linecap="round"/>' for a, b, width in links]
+    parts += [f'<rect x="{fmt(x)}" y="{fmt(y)}" width="{w}" height="{h}" fill="{color}"/>' for x, y, w, h in blocks]
+    if hub:
+        parts += [f'<circle cx="{fmt(x)}" cy="{fmt(y)}" r="{r}" fill="{hub}"/>'
+                  for (x, y), r in ((elbow, 13), (wrist, 10))]
+    return "".join(parts)
+
+
+def robot_arm(rng):
+    sx, sy = ARM_SHOULDER
+    start, control, end = (486, 452), (rng.uniform(500, 520), 262), (356, 196)
+    steps = 5
+    path = [tuple((1 - t) ** 2 * a + 2 * t * (1 - t) * b + t ** 2 * c for a, b, c in zip(start, control, end))
+            for t in (i / (steps - 1) for i in range(steps))]
+    body = []
+    for k in range(1, 7):
+        ring = [(sx + 72 * k * math.cos(a / 180 * math.tau), sy + 72 * k * math.sin(a / 180 * math.tau))
+                for a in range(181)]
+        body.append(f'<polyline points="{points(ring)}" fill="none" stroke="{INK}" stroke-width="1.6" '
+                    f'opacity="{0.42 - k * 0.05:.2f}"/>')
+    body += [arm_pose(wrist, mix(mix(PAPER, BLUE, 0.3), BLUE, i / (steps - 2))) for i, wrist in enumerate(path[:-1])]
+    grip = [(x, y + ARM_WRIST + 36) for x, y in path]
+    body.append(f'<polyline points="{points(grip)}" fill="none" stroke="{NAVY}" stroke-width="3"/>')
+    body += [f'<circle cx="{fmt(x)}" cy="{fmt(y)}" r="6" fill="{MUSTARD}" stroke="{NAVY}" stroke-width="2"/>'
+             for x, y in grip[:-1]]
+    body.append(f'<polygon points="88,646 268,646 236,590 120,590" fill="{INK}"/>')
+    body.append(f'<rect x="40" y="646" width="520" height="7" fill="{INK}"/>')
+    body.append(f'<rect x="{fmt(grip[-1][0] - 27)}" y="{fmt(grip[-1][1] - 20)}" width="54" height="54" '
+                f'fill="{MUSTARD}" stroke="{NAVY}" stroke-width="3"/>')
+    body.append(arm_pose(path[-1], TERRA, PAPER))
+    body.append(f'<circle cx="{fmt(sx)}" cy="{fmt(sy)}" r="37" fill="{INK}"/>'
+                f'<circle cx="{fmt(sx)}" cy="{fmt(sy)}" r="14" fill="{MUSTARD}"/>')
+    return svg("".join(body), PAPER)
+
+
 PIECES = [attention, contours, flowfield, clusters, network, confusion, forecast, radial,
-          halftone, ridgeline, truchet, blobs, stream, multiples, losses, spiral]
+          halftone, ridgeline, truchet, blobs, stream, multiples, losses, spiral, robot_arm]
 
 
 def main():

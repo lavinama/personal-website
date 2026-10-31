@@ -127,6 +127,13 @@ class SiteTest(unittest.TestCase):
             self.assertTrue((tile["alt"] or "").strip(), f"tile without alt: {tile['src']}")
             self.assertTrue(resolve("home", tile["src"]).is_file(), tile["src"])
 
+    def test_home_shows_the_robot_arm_at_every_width(self):
+        tiles = {img["src"]: img["alt"] for img in parse("home").images if img["in_grid"]}
+        self.assertIn("robot arm", tiles.get("assets/img/tile-17.svg", ""))
+        self.assertNotIn("assets/img/tile-10.svg", tiles)
+        html = (ROOT / "index.html").read_text(encoding="utf8")
+        self.assertIn('<div class="cell tile"><img src="assets/img/tile-17.svg"', html)
+
     def test_local_references_resolve(self):
         for page in PAGES:
             parsed = parse(page)
