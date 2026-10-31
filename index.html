@@ -33,7 +33,7 @@
         <div class="cell tile v-lg"><img src="assets/img/tile-02.svg" alt="Generated artwork: loss landscape contours with a descent path" width="600" height="800" decoding="async"></div>
         <div class="cell v-xl"></div>
         <div class="cell v-xl"></div>
-        <div class="cell tile"><img src="assets/img/tile-17.svg" alt="Generated artwork: robot arm lifting a block" width="600" height="800" decoding="async"></div>
+        <div class="cell tile tile-link"><a href="#autowelder" aria-label="Open project: Viam: Robotics Hackathon - AutoWelder"><img src="assets/img/tile-17.svg" alt="Generated artwork: robot arm lifting a block" width="600" height="800" decoding="async"></a></div>
         <div class="cell tile"><img src="assets/img/tile-01.svg" alt="Generated artwork: attention heatmap" width="600" height="800" decoding="async"></div>
         <div class="cell tile v-md"><img src="assets/img/tile-16.svg" alt="Generated artwork: spiral of dots" width="600" height="800" decoding="async"></div>
         <div class="cell v-md"></div>
@@ -66,6 +66,45 @@
     </div>
   </main>
 
+  <dialog class="project" id="autowelder" aria-labelledby="autowelder-title">
+    <article class="project-body">
+      <a class="project-close" href="#">Close</a>
+      <h2 class="project-title" id="autowelder-title">Viam: Robotics Hackathon - AutoWelder</h2>
+      <p class="project-subtitle">A pick and place station for welders</p>
+      <video class="project-video" controls playsinline preload="none" poster="assets/projects/autowelder/poster.jpg" width="1280" height="720" aria-label="Demo of AutoWelder: choosing the cubes on the dashboard, then the robot arm placing the steel">
+        <source src="assets/projects/autowelder/demo.mp4" type="video/mp4">
+      </video>
+      <div class="project-columns">
+        <div class="project-text">
+          <p>Before steel can be welded, the pieces have to be lined up closely enough for a welder to tack them. The robot maps out the environment using the point cloud from the camera, so the cubes and steel can go anywhere in the workspace. A new table layout only needs a fresh scan.</p>
+          <p>On the dashboard, you select the cubes where you want the steel, and the robot places it. It grips the steel at its centre and sets it across the cubes from camera readings, not hand-taught paths. For the second steel, you select the cubes as well as the steel you want to weld it to, and the robot places it automatically.</p>
+          <p>As it places the second steel, the robot reads the gap between the two steels from the camera image, as a dip in brightness across the joint, and nudges the steel closer, 1 mm or less at a time, until there is no space left.</p>
+          <h3>Results</h3>
+          <ul>
+            <li>Full cycle passed 10/10 on each of 4 table layouts on the real arm</li>
+            <li>Picks passed 10/10 from random starts in Isaac Sim</li>
+            <li>Cut drift per cycle from 19 mm to 7.5 mm by tracing it to an off-centre grip</li>
+            <li>Two camera looks at a steel before the grab agreed to 0.36 mm on average (13 runs)</li>
+          </ul>
+          <h3>Hardware</h3>
+          <ul>
+            <li>UFACTORY xArm 850 robot arm</li>
+            <li>RealSense D435 depth camera, mounted on the wrist</li>
+          </ul>
+          <h3>Software</h3>
+          <ul>
+            <li>Viam</li>
+            <li>Python</li>
+            <li>React and Three.js dashboard</li>
+            <li>Isaac Sim</li>
+          </ul>
+        </div>
+        <img class="project-photo" src="assets/projects/autowelder/station.jpg" alt="Mario Lavina standing at the AutoWelder station, with the robot arm, the steel on its cubes, and a laptop showing the dashboard" width="1125" height="1500" loading="lazy" decoding="async">
+      </div>
+    </article>
+  </dialog>
+
   <script src="assets/js/home.js" defer></script>
+  <script src="assets/js/project.js" defer></script>
 </body>
 </html>

@@ -31,6 +31,8 @@ class PageParser(HTMLParser):
         self.scripts = []
         self.assets = []
         self.pdfs = []
+        self.media = []
+        self.dialogs = []
         self.cells = 0
         self.text = []
 
@@ -54,6 +56,12 @@ class PageParser(HTMLParser):
             self.assets.append(attrs["src"])
         if attrs.get("data-pdf"):
             self.pdfs.append(attrs["data-pdf"])
+        if tag == "dialog":
+            self.dialogs.append(attrs.get("id", ""))
+        if tag == "video" and attrs.get("poster"):
+            self.media.append(attrs["poster"])
+        if tag == "source" and attrs.get("src"):
+            self.media.append(attrs["src"])
         if "cell" in classes:
             self.cells += 1
         if tag not in VOID:
@@ -113,10 +121,38 @@ class SiteTest(unittest.TestCase):
             logo = [link for link in parse(page).links if "wordmark" in link["class"]]
             self.assertEqual(logo[0]["text"].strip(), "Mario Lavina", page)
 
-    def test_home_tiles_are_not_clickable(self):
+    def test_only_the_robot_arm_tile_is_clickable(self):
         home = parse("home")
-        self.assertEqual([link for link in home.links if link["in_grid"]], [])
+        self.assertEqual([link["href"] for link in home.links if link["in_grid"]], ["#autowelder"])
         self.assertNotIn("onclick", (ROOT / "index.html").read_text(encoding="utf8"))
+        html = (ROOT / "index.html").read_text(encoding="utf8")
+        self.assertRegex(html, r'href="#autowelder"[^>]*><img src="assets/img/tile-17\.svg"')
+
+    def test_autowelder_project_pop_up(self):
+        home = parse("home")
+        self.assertIn("autowelder", home.dialogs)
+        text = " ".join(home.text)
+        self.assertIn("Viam: Robotics Hackathon - AutoWelder", text)
+        for detail in ("A pick and place station for welders",
+                       "reads the gap between the two steels from the camera image",
+                       "A new table layout only needs a fresh scan", "Results", "Isaac Sim",
+                       "RealSense D435 depth camera", "Software"):
+            self.assertIn(detail, text)
+        self.assertNotIn("YOLO", text)
+        self.assertIn("assets/projects/autowelder/demo.mp4", home.media)
+        self.assertIn("assets/projects/autowelder/poster.jpg", home.media)
+        photos = [img for img in home.images if img["src"] == "assets/projects/autowelder/station.jpg"]
+        self.assertEqual(len(photos), 1)
+        self.assertTrue((photos[0]["alt"] or "").strip())
+        self.assertIn(("assets/js/project.js", None), home.scripts)
+
+    def test_project_media_is_light_and_has_no_location(self):
+        folder = ROOT / "assets/projects/autowelder"
+        video = (folder / "demo.mp4").read_bytes()
+        self.assertLess(len(video), 50 * 1024 * 1024, "GitHub warns above 50 MB")
+        self.assertNotIn(b"com.apple.quicktime", video)
+        for name in ("poster.jpg", "station.jpg"):
+            self.assertNotIn(b"Exif\0\0", (folder / name).read_bytes(), name)
 
     def test_home_grid_shape(self):
         home = parse("home")
@@ -132,13 +168,13 @@ class SiteTest(unittest.TestCase):
         self.assertIn("robot arm", tiles.get("assets/img/tile-17.svg", ""))
         self.assertNotIn("assets/img/tile-10.svg", tiles)
         html = (ROOT / "index.html").read_text(encoding="utf8")
-        self.assertIn('<div class="cell tile"><img src="assets/img/tile-17.svg"', html)
+        self.assertRegex(html, r'<div class="cell tile tile-link"><a [^>]*><img src="assets/img/tile-17\.svg"')
 
     def test_local_references_resolve(self):
         for page in PAGES:
             parsed = parse(page)
             refs = [link["href"] for link in parsed.links]
-            refs += [img["src"] for img in parsed.images] + parsed.iframes + parsed.assets + parsed.pdfs
+            refs += [img["src"] for img in parsed.images] + parsed.iframes + parsed.assets + parsed.pdfs + parsed.media
             for ref in refs:
                 if ref and not ref.startswith(EXTERNAL):
                     self.assertTrue(resolve(page, ref).exists(), f"{page}: {ref}")

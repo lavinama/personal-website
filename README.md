@@ -2,7 +2,7 @@
 
 Mario Lavina's personal site: a one-screen grid of images on the home page, plus **About** and **CV** pages. Plain HTML, CSS and a little JavaScript. There is no build step.
 
-The layout is modelled on a gallery-style artist site: a wordmark top left, two links top right, and a sparse grid of image tiles that rise in on load. The tiles are not clickable.
+The layout is modelled on a gallery-style artist site: a wordmark top left, two links top right, and a sparse grid of image tiles that rise in on load. The robot arm tile opens a project pop-up; the other tiles are not clickable.
 
 ## Run it
 
@@ -21,6 +21,8 @@ Open http://localhost:8000. Any static file server works.
 | `cv/index.html` | CV page: the PDF drawn into the page, with a download link |
 | `assets/css/style.css` | All styles |
 | `assets/js/home.js` | Tile reveal animation (respects reduced motion) |
+| `assets/js/project.js` | Opens and closes the project pop-up from the URL hash (`#autowelder`) |
+| `assets/projects/autowelder/` | The project's video, poster and photo, with location data removed |
 | `assets/js/cv.js` | Draws the CV PDF page by page with PDF.js, so it shows in any browser, with selectable text and clickable links |
 | `assets/js/cv-render.js` | Decides when the pages are drawn and swapped (no PDF.js in it, so Node can test it) |
 | `assets/vendor/pdfjs/` | PDF.js 5.6.205, self-hosted (Apache-2.0, see its README) |
@@ -35,6 +37,8 @@ Open http://localhost:8000. Any static file server works.
 **Swap a tile image.** Replace `assets/img/tile-NN.svg` with your own file, or point the `<img>` in `index.html` at a new one (keep the `alt` text meaningful). Images are cropped to fill their tile, so any aspect ratio works; portrait around 3:4 crops least.
 
 **Regenerate the placeholder art.** `python3 scripts/generate_art.py` rewrites all 17 SVGs. They are drawn in code from fixed seeds, so the output is repeatable. `tile-10.svg`, the ridgeline, is generated but not on the home page.
+
+**Add project media.** Phone photos and videos carry GPS coordinates, and this repository is public, so strip metadata first and keep videos under 50 MB.
 
 **Update the CV.** Compile the résumé and overwrite `assets/Mario_Lavina_CV.pdf`. This is a public site, so the PDF in this repo has the phone number and email removed from its header. Check that again after every rebuild.
 
