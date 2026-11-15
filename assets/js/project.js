@@ -5,7 +5,10 @@
 
   const sync = () => {
     const wanted = location.hash === `#${dialog.id}`;
-    if (wanted && !dialog.open) dialog.showModal();
+    if (wanted && !dialog.open) {
+      document.querySelectorAll("video").forEach((video) => video.pause());
+      dialog.showModal();
+    }
     if (!wanted && dialog.open) dialog.close();
   };
 
