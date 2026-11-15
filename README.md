@@ -2,7 +2,7 @@
 
 Mario Lavina's personal site: a one-screen grid of images on the home page, plus **About** and **CV** pages. Plain HTML, CSS and a little JavaScript. There is no build step.
 
-The layout is modelled on a gallery-style artist site: a wordmark top left, two links top right, and a sparse grid of image tiles that rise in on load. The robot arm tile opens a project pop-up; the other tiles are not clickable.
+The layout is modelled on a gallery-style artist site: a wordmark top left, two links top right, and a sparse grid of image tiles that rise in on load. Only tiles with a project behind them are shown: today that is the robot arm, which opens the AutoWelder pop-up.
 
 ## Run it
 
@@ -16,7 +16,7 @@ Open http://localhost:8000. Any static file server works.
 
 | Path | What it is |
 | --- | --- |
-| `index.html` | Home: 40 grid cells (16 hold images). Which cells exist at which width is set by the `v-*` classes. |
+| `index.html` | Home: 40 grid cells (1 holds an image, the rest are empty). Which cells exist at which width is set by the `v-*` classes. |
 | `about/index.html` | About page |
 | `cv/index.html` | CV page: the PDF drawn into the page, with a download link |
 | `assets/css/style.css` | All styles |
@@ -26,7 +26,7 @@ Open http://localhost:8000. Any static file server works.
 | `assets/js/cv.js` | Draws the CV PDF page by page with PDF.js, so it shows in any browser, with selectable text and clickable links |
 | `assets/js/cv-render.js` | Decides when the pages are drawn and swapped (no PDF.js in it, so Node can test it) |
 | `assets/vendor/pdfjs/` | PDF.js 5.6.205, self-hosted (Apache-2.0, see its README) |
-| `assets/img/tile-NN.svg` | Home-page artwork |
+| `assets/img/tile-NN.svg` | Home-page artwork. Only `tile-17.svg` is on the home page; the rest are kept for future projects |
 | `assets/Mario_Lavina_CV.pdf` | The CV |
 | `assets/fonts/` | Inter Tight (SIL Open Font License, see `OFL.txt`) |
 | `tests/test_site.py` | Smoke tests: navigation, tile grid, local links, PDF |
@@ -34,9 +34,11 @@ Open http://localhost:8000. Any static file server works.
 
 ## Common changes
 
+**Add a project tile.** Every tile on the home page must open a project (the tests check this). Turn an empty cell into `<div class="cell tile tile-link"><a href="#project-id" aria-label="Open project: ..."><img ...></a></div>`, keeping its `v-*` class, and add a matching `<dialog>` like `#autowelder`. Cells with no `v-*` class show at every width.
+
 **Swap a tile image.** Replace `assets/img/tile-NN.svg` with your own file, or point the `<img>` in `index.html` at a new one (keep the `alt` text meaningful). Images are cropped to fill their tile, so any aspect ratio works; portrait around 3:4 crops least.
 
-**Regenerate the placeholder art.** `python3 scripts/generate_art.py` rewrites all 17 SVGs. They are drawn in code from fixed seeds, so the output is repeatable. `tile-10.svg`, the ridgeline, is generated but not on the home page.
+**Regenerate the placeholder art.** `python3 scripts/generate_art.py` rewrites all 17 SVGs. They are drawn in code from fixed seeds, so the output is repeatable. Only `tile-17.svg`, the robot arm, is on the home page.
 
 **Add project media.** Phone photos and videos carry GPS coordinates, and this repository is public, so strip metadata first and keep videos under 50 MB.
 

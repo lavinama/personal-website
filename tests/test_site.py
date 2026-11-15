@@ -158,10 +158,18 @@ class SiteTest(unittest.TestCase):
         home = parse("home")
         tiles = [img for img in home.images if img["in_grid"]]
         self.assertEqual(home.cells, 40)
-        self.assertEqual(len(tiles), 16)
+        self.assertEqual(len(tiles), 1)
         for tile in tiles:
             self.assertTrue((tile["alt"] or "").strip(), f"tile without alt: {tile['src']}")
             self.assertTrue(resolve("home", tile["src"]).is_file(), tile["src"])
+
+    def test_every_home_tile_opens_a_project(self):
+        html = (ROOT / "index.html").read_text(encoding="utf8")
+        tiles = re.findall(r'<div class="cell tile[^"]*">.*?</div>', html)
+        self.assertTrue(tiles)
+        for tile in tiles:
+            self.assertIn("tile-link", tile, f"tile without a project: {tile}")
+            self.assertRegex(tile, r'<a href="#[a-z-]+"', tile)
 
     def test_home_shows_the_robot_arm_at_every_width(self):
         tiles = {img["src"]: img["alt"] for img in parse("home").images if img["in_grid"]}
