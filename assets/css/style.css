@@ -157,7 +157,12 @@ a {
   object-position: center;
 }
 
+/* A project tile is a card: hovering turns it over to the project's name (tile-hover.js),
+   then the pop-up opens. The cell does not clip, so the card can swing out of it as it turns. */
 .tile-link {
+  overflow: visible;
+  background: none;
+  perspective: 1200px;
   pointer-events: auto;
 }
 
@@ -165,20 +170,49 @@ a {
   position: absolute;
   inset: 0;
   display: block;
+  transform-style: preserve-3d;
+  transition: transform 600ms var(--ease);
+}
+
+.tile-link.is-turned a {
+  transform: rotateY(180deg);
 }
 
 .tile-link a:focus-visible {
   outline-offset: -4px;
 }
 
-.tile-link img {
-  transition: transform 500ms var(--ease);
+.tile-link img,
+.tile-back {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
-@media (hover: hover) and (min-width: 1024px) {
-  .tile-link a:hover img {
-    transform: scale(1.04);
-  }
+.tile-back {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 0.4em;
+  padding: clamp(8px, 7%, 20px);
+  background: var(--ink);
+  color: var(--paper);
+  transform: rotateY(180deg);
+  container-type: inline-size; /* text below is sized to the tile, which is narrow on desktop */
+}
+
+.tile-back-title {
+  font-size: min(20cqi, 2rem); /* "AutoWelder" is 4.84 times its font size wide */
+  font-weight: 500;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+}
+
+.tile-back-note {
+  font-size: clamp(0.6875rem, 7.5cqi, 0.9375rem);
+  line-height: 1.2;
+  opacity: 0.75;
 }
 
 /* Which cells exist at which width. 40 cells at xl (10 x 4), 32 at lg, 12 at md, 6 on phones. */
@@ -261,6 +295,10 @@ a {
   .js .tile.is-in {
     opacity: 1;
     transform: none;
+    transition: none;
+  }
+
+  .tile-link a {
     transition: none;
   }
 }

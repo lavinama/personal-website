@@ -2,7 +2,7 @@
 
 Mario Lavina's personal site: a one-screen grid of images on the home page, plus **About** and **CV** pages. Plain HTML, CSS and a little JavaScript. There is no build step.
 
-The layout is modelled on a gallery-style artist site: a wordmark top left, two links top right, and a sparse grid of image tiles that rise in on load. Only tiles with a project behind them are shown: today that is the robot arm, which opens the AutoWelder pop-up.
+The layout is modelled on a gallery-style artist site: a wordmark top left, two links top right, and a sparse grid of image tiles that rise in on load. Only tiles with a project behind them are shown: today that is the robot arm. Hovering it with a mouse turns it over to the project's name, then opens the AutoWelder pop-up; a click or tap opens it straight away.
 
 ## Run it
 
@@ -22,6 +22,8 @@ Open http://localhost:8000. Any static file server works.
 | `assets/css/style.css` | All styles |
 | `assets/js/home.js` | Tile reveal animation (respects reduced motion) |
 | `assets/js/project.js` | Opens and closes the project pop-up from the URL hash (`#autowelder`) |
+| `assets/js/tile-hover.js` | Turns a project tile over on mouse hover and opens its pop-up when the turn ends |
+| `assets/js/hover-open.js` | Decides when hovering opens the pop-up (no DOM in it, so Node can test it) |
 | `assets/projects/autowelder/` | The project's video, poster and photo, with location data removed |
 | `assets/js/cv.js` | Draws the CV PDF page by page with PDF.js, so it shows in any browser, with selectable text and clickable links |
 | `assets/js/cv-render.js` | Decides when the pages are drawn and swapped (no PDF.js in it, so Node can test it) |
@@ -30,11 +32,12 @@ Open http://localhost:8000. Any static file server works.
 | `assets/Mario_Lavina_CV.pdf` | The CV |
 | `assets/fonts/` | Inter Tight (SIL Open Font License, see `OFL.txt`) |
 | `tests/test_site.py` | Smoke tests: navigation, tile grid, local links, PDF |
+| `tests/hover-open.test.mjs` | Hover tests: a passing pointer opens nothing, and closing the pop-up over the tile does not reopen it |
 | `tests/cv-render.test.mjs` | Viewer tests: one copy of each page, whatever the width does (run by `test_site.py` when Node is installed) |
 
 ## Common changes
 
-**Add a project tile.** Every tile on the home page must open a project (the tests check this). Turn an empty cell into `<div class="cell tile tile-link"><a href="#project-id" aria-label="Open project: ..."><img ...></a></div>`, keeping its `v-*` class, and add a matching `<dialog>` like `#autowelder`. Cells with no `v-*` class show at every width.
+**Add a project tile.** Every tile on the home page must open a project (the tests check this). Turn an empty cell into `<div class="cell tile tile-link"><a href="#project-id" aria-label="Open project: ..."><img ...><span class="tile-back" aria-hidden="true">...</span></a></div>`, keeping its `v-*` class, and add a matching `<dialog>` like `#autowelder`. The `tile-back` span is what the card shows when it turns over on hover. Cells with no `v-*` class show at every width.
 
 **Swap a tile image.** Replace `assets/img/tile-NN.svg` with your own file, or point the `<img>` in `index.html` at a new one (keep the `alt` text meaningful). Images are cropped to fill their tile, so any aspect ratio works; portrait around 3:4 crops least.
 
