@@ -1,8 +1,8 @@
 # personal-website
 
-Mario Lavina's personal site: a one-screen grid of images on the home page, plus **About** and **CV** pages. Plain HTML, CSS and a little JavaScript. There is no build step.
+Mario Lavina's personal site: a one-screen grid of images on the home page, plus **Projects**, **About** and **CV** pages. Plain HTML, CSS and a little JavaScript. There is no build step.
 
-The layout is modelled on a gallery-style artist site: a wordmark top left, two links top right, and a sparse grid of image tiles that rise in on load. Only tiles with a project behind them are shown: today that is the robot arm. Hovering it with a mouse turns it over to the project's name, then opens the AutoWelder pop-up; a click or tap opens it straight away.
+The layout is modelled on a gallery-style artist site: a wordmark top left, three links top right, and a sparse grid of image tiles that rise in on load. Only tiles with a project behind them are shown: today that is the robot arm. Hovering it with a mouse turns it over to the project's name, then opens the AutoWelder pop-up; a click or tap opens it straight away.
 
 ## Run it
 
@@ -17,6 +17,7 @@ Open http://localhost:8000. Any static file server works.
 | Path | What it is |
 | --- | --- |
 | `index.html` | Home: 40 grid cells (1 holds an image, the rest are empty). Which cells exist at which width is set by the `v-*` classes. |
+| `projects/index.html` | Projects: one row per project, its video first (it plays only when pressed), the date above the name, then what it is and where. The name opens the project's pop-up, a copy of the one on the home page (the tests check the two match). |
 | `about/index.html` | About page |
 | `cv/index.html` | CV page: the PDF drawn into the page, with a download link |
 | `assets/css/style.css` | All styles |

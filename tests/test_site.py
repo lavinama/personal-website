@@ -11,7 +11,7 @@ from html.parser import HTMLParser
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-PAGES = {"home": "index.html", "about": "about/index.html", "cv": "cv/index.html"}
+PAGES = {"home": "index.html", "projects": "projects/index.html", "about": "about/index.html", "cv": "cv/index.html"}
 VOID = {"img", "link", "meta", "br", "hr", "input", "source"}
 EXTERNAL = ("http://", "https://", "mailto:", "tel:", "#")
 # The repository is public: no phone, email or private repository names in text files.
@@ -32,6 +32,7 @@ class PageParser(HTMLParser):
         self.assets = []
         self.pdfs = []
         self.media = []
+        self.videos = []
         self.dialogs = []
         self.cells = 0
         self.text = []
@@ -58,6 +59,9 @@ class PageParser(HTMLParser):
             self.pdfs.append(attrs["data-pdf"])
         if tag == "dialog":
             self.dialogs.append(attrs.get("id", ""))
+        if tag == "video":
+            in_dialog = any(name == "dialog" for name, _ in self.stack)
+            self.videos.append({**attrs, "in_dialog": in_dialog})
         if tag == "video" and attrs.get("poster"):
             self.media.append(attrs["poster"])
         if tag == "source" and attrs.get("src"):
@@ -99,12 +103,20 @@ class SiteTest(unittest.TestCase):
         for page, path in PAGES.items():
             self.assertTrue((ROOT / path).is_file(), f"{page} page missing: {path}")
 
-    def test_nav_has_only_about_and_cv(self):
+    def test_nav_has_projects_about_and_cv(self):
+        targets = ["projects/index.html", "about/index.html", "cv/index.html"]
         for page in PAGES:
             nav = [link for link in parse(page).links if link["in_nav"]]
-            self.assertEqual([link["text"].strip() for link in nav], ["About", "CV"], page)
-            self.assertEqual(resolve(page, nav[0]["href"]), ROOT / "about/index.html", page)
-            self.assertEqual(resolve(page, nav[1]["href"]), ROOT / "cv/index.html", page)
+            self.assertEqual([link["text"].strip() for link in nav], ["Projects", "About", "CV"], page)
+            for link, target in zip(nav, targets):
+                self.assertEqual(resolve(page, link["href"]), ROOT / target, page)
+
+    def test_nav_marks_the_current_page(self):
+        for page in ("projects", "about", "cv"):
+            html = (ROOT / PAGES[page]).read_text(encoding="utf8")
+            current = re.findall(r'<a href="([^"]*)" aria-current="page">', html)
+            self.assertEqual(len(current), 1, page)
+            self.assertEqual(resolve(page, current[0]), ROOT / PAGES[page], page)
 
     def test_no_menu_button(self):
         for page in PAGES:
@@ -155,6 +167,35 @@ class SiteTest(unittest.TestCase):
         css = (ROOT / "assets/css/style.css").read_text(encoding="utf8")
         self.assertIn(".tile-link.is-turned a", css)
         self.assertIn("backface-visibility: hidden", css)
+
+    def test_projects_page_lists_autowelder_with_its_video(self):
+        projects = parse("projects")
+        text = " ".join(projects.text)
+        for detail in ("Projects", "October 2026", "AutoWelder",
+                       "A pick and place station for welders", "Viam robotics hackathon"):
+            self.assertIn(detail, text)
+        self.assertNotIn("[", text, "no placeholder rows on the live page")
+        self.assertIn("#autowelder", [link["href"] for link in projects.links if not link["in_nav"]])
+        html = (ROOT / "projects/index.html").read_text(encoding="utf8")
+        self.assertRegex(html, r'<time [^>]*datetime="2026-10"[^>]*>October 2026</time>')
+
+    def test_project_list_videos_play_only_when_asked(self):
+        listed = [video for video in parse("projects").videos if not video["in_dialog"]]
+        self.assertEqual(len(listed), 1)
+        video = listed[0]
+        self.assertNotIn("autoplay", video)
+        self.assertEqual(video.get("preload"), "none")
+        self.assertIn("controls", video)
+        self.assertEqual(video.get("poster"), "../assets/projects/autowelder/poster.jpg")
+        self.assertTrue((video.get("aria-label") or "").strip())
+
+    def test_projects_page_pop_up_matches_the_home_one(self):
+        def dialog(page):
+            html = (ROOT / PAGES[page]).read_text(encoding="utf8")
+            found = re.search(r'<dialog class="project" id="autowelder".*?</dialog>', html, re.S).group(0)
+            return found.replace('"../assets/', '"assets/')
+        self.assertEqual(dialog("projects"), dialog("home"))
+        self.assertIn(("../assets/js/project.js", None), parse("projects").scripts)
 
     def test_project_media_is_light_and_has_no_location(self):
         folder = ROOT / "assets/projects/autowelder"
