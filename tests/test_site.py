@@ -146,6 +146,16 @@ class SiteTest(unittest.TestCase):
         self.assertTrue((photos[0]["alt"] or "").strip())
         self.assertIn(("assets/js/project.js", None), home.scripts)
 
+    def test_robot_arm_tile_turns_over_to_the_project_on_hover(self):
+        home = parse("home")
+        self.assertIn(("assets/js/tile-hover.js", "module"), home.scripts)
+        html = (ROOT / "index.html").read_text(encoding="utf8")
+        tile = re.search(r'<div class="cell tile tile-link">.*?</div>', html, re.S).group(0)
+        self.assertRegex(tile, r'<span class="tile-back" aria-hidden="true">.*AutoWelder.*</span>')
+        css = (ROOT / "assets/css/style.css").read_text(encoding="utf8")
+        self.assertIn(".tile-link.is-turned a", css)
+        self.assertIn("backface-visibility: hidden", css)
+
     def test_project_media_is_light_and_has_no_location(self):
         folder = ROOT / "assets/projects/autowelder"
         video = (folder / "demo.mp4").read_bytes()
@@ -158,10 +168,18 @@ class SiteTest(unittest.TestCase):
         home = parse("home")
         tiles = [img for img in home.images if img["in_grid"]]
         self.assertEqual(home.cells, 40)
-        self.assertEqual(len(tiles), 16)
+        self.assertEqual(len(tiles), 1)
         for tile in tiles:
             self.assertTrue((tile["alt"] or "").strip(), f"tile without alt: {tile['src']}")
             self.assertTrue(resolve("home", tile["src"]).is_file(), tile["src"])
+
+    def test_every_home_tile_opens_a_project(self):
+        html = (ROOT / "index.html").read_text(encoding="utf8")
+        tiles = re.findall(r'<div class="cell tile[^"]*">.*?</a></div>', html, re.S)
+        self.assertTrue(tiles)
+        for tile in tiles:
+            self.assertIn("tile-link", tile, f"tile without a project: {tile}")
+            self.assertRegex(tile, r'<a href="#[a-z-]+"', tile)
 
     def test_home_shows_the_robot_arm_at_every_width(self):
         tiles = {img["src"]: img["alt"] for img in parse("home").images if img["in_grid"]}
